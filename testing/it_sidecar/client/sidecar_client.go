@@ -90,7 +90,7 @@ func (s *K8STestSetup) before() {
 			if err != nil {
 				log.Fatal(err)
 			}
-			log.Println(str)
+			log.Print(str)
 		}
 	}()
 
@@ -136,7 +136,7 @@ waitForReady:
 			if err != nil {
 				log.Fatal(err)
 			}
-			log.Println(str)
+			log.Print(str)
 		}
 	}()
 
