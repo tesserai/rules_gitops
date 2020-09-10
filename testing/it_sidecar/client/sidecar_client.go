@@ -61,7 +61,7 @@ func (s *K8STestSetup) GetServiceLocalPort(serviceName string) int {
 }
 
 func (s *K8STestSetup) before() {
-	fmt.Printf("setup command: %s\n", *setupCMD)
+	log.Printf("setup command: %s\n", *setupCMD)
 
 	args := make([]string, 0)
 	for _, app := range s.WaitForPods {
@@ -76,15 +76,22 @@ func (s *K8STestSetup) before() {
 	var err error
 	//Open and start reading stderr in a new goroutine
 	if s.er, err = s.cmd.StderrPipe(); err != nil {
-		log.Fatal(err)
+		log.Fatal(fmt.Errorf("unable to read  setup command STDOUT; %w", err))
 	}
+
+
 	go func() {
 		rd := bufio.NewReader(s.er)
-		str, err := rd.ReadString('\n')
-		if err != nil {
-			log.Fatal(err)
+		for {
+			str, err := rd.ReadString('\n')
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				log.Fatal(err)
+			}
+			log.Println(str)
 		}
-		log.Println(str)
 	}()
 
 	//Open stdin and stdout
@@ -106,7 +113,7 @@ waitForReady:
 	for {
 		str, err := rd.ReadString('\n')
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("Unable to read from setup script stdout. Cannot wait for pods")
 		}
 		fmt.Print(str)
 		if strings.HasPrefix(str, "FORWARD") {
@@ -121,11 +128,16 @@ waitForReady:
 	}
 	//Start reading stdout in a new goroutine
 	go func() {
-		str, err := rd.ReadString('\n')
-		if err != nil {
-			log.Fatal(err)
+		for {
+			str, err := rd.ReadString('\n')
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				log.Fatal(err)
+			}
+			log.Println(str)
 		}
-		log.Println(str)
 	}()
 
 }

@@ -55,7 +55,6 @@ else
     DELETE_NAMESPACE_FLAG="-delete_namespace"
     COUNT="0"
     while true; do
-#        NAMESPACE=${USER}-$(( (RANDOM) + 32767 ))
         NAMESPACE=`whoami`-$(( (RANDOM) + 32767 ))
         ${KUBECTL} --kubeconfig=${KUBECONFIG} --cluster=${CLUSTER} --user=${USER} create namespace ${NAMESPACE} && break
         COUNT=$[$COUNT + 1]
