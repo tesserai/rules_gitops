@@ -70,7 +70,7 @@ jobs:
       - name: Test examples
         run: |
           cd examples
-          bazel test //...
+          bazel test //... --test_output=streamed
       - name: E2E
         run: |
           cd examples
