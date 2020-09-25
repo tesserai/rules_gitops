@@ -70,6 +70,7 @@ jobs:
       - name: Test examples
         run: |
           cd examples
+          echo "value of home is $HOME"
           bazel test //... --test_output=streamed
       - name: E2E
         run: |
