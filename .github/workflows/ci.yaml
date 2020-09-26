@@ -76,6 +76,7 @@ jobs:
           echo "!!!!!!!!!!!!!!!!!!!"
           cat bazel-bin/helloworld/helloworld_integration_test_/helloworld_integration_test.runfiles/examples/../com_adobe_rules_gitops/skylib/more_stable_status.txt
           echo "!!!!!!!!!!!!!!!!!!!"
+          ls bazel-bin/helloworld/helloworld_integration_test_/helloworld_integration_test.runfiles/examples/helloworld/image.0.config
           cat bazel-bin/helloworld/helloworld_integration_test_/helloworld_integration_test.runfiles/examples/helloworld/image.0.config
           bazel test //... --test_output=streamed
       - name: E2E
