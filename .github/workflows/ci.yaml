@@ -70,16 +70,10 @@ jobs:
       - name: Test examples
         run: |
           cd examples
-          echo "value of home is $HOME"
-          echo "push script:"
-          cat bazel-bin/helloworld/helloworld_integration_test_/helloworld_integration_test.runfiles/examples/helloworld/helloworld-image_mynamespace_push
-          echo "!!!!!!!!!!!!!!!!!!!"
-          cat bazel-bin/helloworld/helloworld_integration_test_/helloworld_integration_test.runfiles/examples/../com_adobe_rules_gitops/skylib/more_stable_status.txt
-          echo "!!!!!!!!!!!!!!!!!!!"
-          ls bazel-bin/helloworld/helloworld_integration_test_/helloworld_integration_test.runfiles/examples/helloworld/image.0.config
-          cat bazel-bin/helloworld/helloworld_integration_test_/helloworld_integration_test.runfiles/examples/helloworld/image.0.config
-          echo "!!!!!!!!!!!!!!!!!!!"
-          bazel test //... --test_output=streamed
+          export RUNFILES="bazel-bin/helloworld/helloworld_integration_test_/helloworld_integration_test.runfiles"
+          echo "Running push script directly"
+	  bazel-bin/helloworld/helloworld_integration_test_/helloworld_integration_test.runfiles/examples/helloworld/helloworld-image_mynamespace_push
+          #bazel test //... --test_output=streamed
       - name: E2E
         run: |
           cd examples
