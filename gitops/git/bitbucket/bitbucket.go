@@ -28,62 +28,62 @@ var (
 	bitbucketPassword = flag.String("bitbucket_password", os.Getenv("BITBUCKET_PASSWORD"), "bitbucket api user password")
 )
 
-type Project struct {
+type project struct {
 	Key string `json:"key,omitempty"`
 }
 
-type Repository struct {
+type repository struct {
 	Slug    string  `json:"slug,omitempty"`
-	Project Project `json:"project"`
+	Project project `json:"project"`
 }
 
-type PullrequestEndpoint struct {
+type pullrequestEndpoint struct {
 	ID         string     `json:"id,omitempty"`
-	Repository Repository `json:"repository,omitempty"`
+	Repository repository `json:"repository,omitempty"`
 }
 
-type Account struct {
-	User User `json:"user"`
+type account struct {
+	User user `json:"user"`
 }
 
-type User struct {
+type user struct {
 	Name string `json:"name,omitempty"`
 }
 
-type Pullrequest struct {
+type pullrequest struct {
 	Title       string               `json:"title,omitempty"`
 	Description string               `json:"description,omitempty"`
 	State       string               `json:"state,omitempty"`
 	Open        bool                 `json:"open"`
 	Closed      bool                 `json:"closed"`
-	FromRef     *PullrequestEndpoint `json:"fromRef,omitempty"`
-	ToRef       *PullrequestEndpoint `json:"toRef,omitempty"`
+	FromRef     *pullrequestEndpoint `json:"fromRef,omitempty"`
+	ToRef       *pullrequestEndpoint `json:"toRef,omitempty"`
 	Locked      bool                 `json:"locked"`
-	Reviewers   []Account            `json:"reviewers,omitempty"`
+	Reviewers   []account            `json:"reviewers,omitempty"`
 }
 
 // CreatePR creates a pull request using branch names from and to
 func CreatePR(from, to, title string) error {
-	repo := Repository{
+	repo := repository{
 		Slug:    "repo",
-		Project: Project{"TM"},
+		Project: project{"TM"},
 	}
-	prReq := Pullrequest{
+	prReq := pullrequest{
 		Title:       title,
 		Description: title,
 		State:       "OPEN",
 		Open:        true,
 		Closed:      false,
-		FromRef: &PullrequestEndpoint{
+		FromRef: &pullrequestEndpoint{
 			ID:         "refs/heads/" + from,
 			Repository: repo,
 		},
-		ToRef: &PullrequestEndpoint{
+		ToRef: &pullrequestEndpoint{
 			ID:         "refs/heads/" + to,
 			Repository: repo,
 		},
 		Locked:    false,
-		Reviewers: []Account{},
+		Reviewers: []account{},
 	}
 	json, err := json.Marshal(&prReq)
 	if err != nil {

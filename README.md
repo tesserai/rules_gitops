@@ -31,6 +31,7 @@ Add the following to your `WORKSPACE` file to add the necessary external depende
 rev=$(git rev-parse HEAD) && sha265=$(curl -Ls https://github.com/adobe/rules_gitops/archive/${rev}.zip | shasum -a 256 - | cut -d ' ' -f1) && cat <<EOF
 # copy/paste following snippet into README.md
 rules_gitops_version = "${rev}"
+
 http_archive(
     name = "com_adobe_rules_gitops",
     sha256 = "${sha265}",
@@ -43,11 +44,11 @@ EOF
 ```python
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-rules_gitops_version = "6e6de4f29a787197738cf931be49812e8dd6dc0c"
+rules_gitops_version = "8d9416a36904c537da550c95dc7211406b431db9"
 
 http_archive(
     name = "com_adobe_rules_gitops",
-    sha256 = "4f271d73ccd837a379170d2e26b14c5595309ed28d06a9b1c3b453022fd93485",
+    sha256 = "25601ed932bab631e7004731cf81a40bd00c9a34b87c7de35f6bc905c37ef30d",
     strip_prefix = "rules_gitops-%s" % rules_gitops_version,
     urls = ["https://github.com/adobe/rules_gitops/archive/%s.zip" % rules_gitops_version],
 )
@@ -99,6 +100,7 @@ When you run `bazel run ///helloworld:mynamespace.apply`, it applies this file i
 | ***deps_aliases***        | `{}`           | A dict of labels of file dependencies. File dependency contents are available for template expansion in manifests as `{{imports.<label>}}`. Each dependency in this dictionary should be present in the `deps` attribute.
 | ***objects***             | `[]`           | A list of other instances of `k8s_deploy` that this one depends on. See [Adding Dependencies](#adding-dependencies).
 | ***images***              | `{}`           | A dict of labels of Docker images. See [Injecting Docker Images](#injecting-docker-images).
+| ***image_digest_tag***    | `False`        | A flag for whether or not to tag the image with the container digest.
 | ***image_registry***      | `docker.io`    | The registry to push images to. 
 | ***image_repository***    | `None`         | The repository to push images to. By default, this is generated from the current package path.
 | ***image_repository_prefix*** | `None`     | Add a prefix to the image_repository. Can be used to upload the images in
