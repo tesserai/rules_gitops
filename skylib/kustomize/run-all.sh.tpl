@@ -43,7 +43,5 @@ function waitpids() {
     fi
 }
 
-HOME=$TEST_TMPDIR
-
 %{statements}
 
