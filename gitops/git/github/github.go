@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"flag"
-	"fmt"
 	"github.com/google/go-github/v32/github"
 	"golang.org/x/oauth2"
 	"io/ioutil"
@@ -48,14 +47,13 @@ func CreatePR(from, to, title string) error {
 	_, resp, err := gh.PullRequests.Create(ctx, *repoOwner, *repo, pr)
 	defer resp.Body.Close()
 	if err != nil {
-		return fmt.Errorf("unable to send CreatePR request: %w", err)
+		log.Printf("Error on CreatePR request: %v", err)
 	}
 	body, _ := ioutil.ReadAll(resp.Body)
 	log.Print("github response: ", string(body))
 	if 422 == resp.StatusCode {
 		log.Print("Reusing existing PR")
-		return nil
 	}
-	return err
+	return nil
 }
 
