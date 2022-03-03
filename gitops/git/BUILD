@@ -20,5 +20,5 @@ go_library(
     ],
     importpath = "github.com/adobe/rules_gitops/gitops/git",
     visibility = ["//visibility:public"],
-    deps = ["//gitops/exec:go_default_library"],
+    deps = ["@com_adobe_rules_gitops//gitops/exec:go_default_library"],
 )

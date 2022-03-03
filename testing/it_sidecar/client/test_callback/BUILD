@@ -11,5 +11,5 @@ go_test(
         "//testing/it_sidecar/client:noop.setup",
     ],
     rundir = ".",
-    deps = ["//testing/it_sidecar/client:go_default_library"],
+    deps = ["@com_adobe_rules_gitops//testing/it_sidecar/client:go_default_library"],
 )

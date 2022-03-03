@@ -15,7 +15,7 @@ go_library(
     srcs = ["main.go"],
     importpath = "github.com/adobe/rules_gitops/stamper",
     visibility = ["//visibility:private"],
-    deps = ["//templating/fasttemplate:go_default_library"],
+    deps = ["@com_adobe_rules_gitops//templating/fasttemplate:go_default_library"],
 )
 
 go_binary(

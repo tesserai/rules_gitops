@@ -5,7 +5,7 @@ go_library(
     srcs = ["resolver.go"],
     importpath = "github.com/adobe/rules_gitops/resolver",
     visibility = ["//visibility:private"],
-    deps = ["//resolver/pkg:go_default_library"],
+    deps = ["@com_adobe_rules_gitops//resolver/pkg:go_default_library"],
 )
 
 go_binary(

@@ -5,7 +5,7 @@ go_library(
     srcs = ["gitlab.go"],
     importpath = "github.com/adobe/rules_gitops/gitops/git/gitlab",
     visibility = ["//visibility:public"],
-    deps = ["//vendor/github.com/xanzy/go-gitlab:go_default_library"],
+    deps = ["@com_github_xanzy_go_gitlab//:go_default_library"],
 )
 
 go_test(

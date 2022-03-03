@@ -5,7 +5,7 @@ go_library(
     srcs = ["it_manifest_filter.go"],
     importpath = "github.com/adobe/rules_gitops/testing/it_manifest_filter",
     visibility = ["//visibility:private"],
-    deps = ["//testing/it_manifest_filter/pkg:go_default_library"],
+    deps = ["@com_adobe_rules_gitops//testing/it_manifest_filter/pkg:go_default_library"],
 )
 
 go_binary(

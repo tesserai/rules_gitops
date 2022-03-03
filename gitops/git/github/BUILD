@@ -6,7 +6,7 @@ go_library(
     importpath = "github.com/adobe/rules_gitops/gitops/git/github",
     visibility = ["//visibility:public"],
     deps = [
-        "//vendor/github.com/google/go-github/v32/github:go_default_library",
-        "//vendor/golang.org/x/oauth2:go_default_library",
+        "@com_github_google_go_github_v32//github:go_default_library",
+        "@org_golang_x_oauth2//:go_default_library",
     ],
 )
