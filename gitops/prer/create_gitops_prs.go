@@ -53,7 +53,54 @@ var (
 	gitCommit              = flag.String("git_commit", "unknown", "Git commit to use in commit message")
 	deploymentBranchSuffix = flag.String("deployment_branch_suffix", "", "suffix to add to all deployment branch names")
 	gitHost                = flag.String("git_server", "bitbucket", "the git server api to use. 'bitbucket', 'github' or 'gitlab'")
+	forceContainerPush     = flag.Bool("force_container_push", false, "whether or not to push containers even if there are no git changes")
+	runBazelBuild          = flag.Bool("run_bazel_build", false, "whether or not to bazel build any targets referenced")
+	gitSubmodulePath       = flag.String("git_submodule_path", "", "")
+	gitSourceRepo          = flag.String("git_source_repo", "", "")
 )
+
+func bazelInfo(args ...string) map[string]string {
+	log.Println("Executing bazel info")
+	cmd := oe.Command(*bazelCmd, append([]string{"info"}, args...)...)
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		log.Fatal(err)
+	}
+	go func() {
+		io.Copy(os.Stderr, stderr)
+	}()
+	info, err := cmd.Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	m := map[string]string{}
+	for _, line := range strings.Split(string(info), "\n") {
+		if line == "" {
+			continue
+		}
+		split := strings.SplitN(line, ": ", 2)
+		m[split[0]] = split[1]
+	}
+
+	return m
+}
+
+func bazelBuild(args ...string) {
+	log.Println("Executing bazel build", strings.Join(args, " "))
+	cmd := oe.Command(*bazelCmd, append([]string{"build", "-c", "opt"}, args...)...)
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		log.Fatal(err)
+	}
+	go func() {
+		io.Copy(os.Stderr, stderr)
+	}()
+	_, err = cmd.Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
 func bazelQuery(query string) *analysis.CqueryResult {
 	log.Println("Executing bazel cquery ", query)
@@ -132,10 +179,20 @@ func main() {
 
 	var updatedGitopsTargets []string
 	var updatedGitopsBranches []string
+	var gitopsBranches []string
+	var gitopsTargets []string
+
+	var bazelBinDir = "bazel-bin"
+	bazelInfo := bazelInfo("-c", "opt")
+	if v, ok := bazelInfo["bazel-bin"]; ok {
+		bazelBinDir = v
+	}
 
 	for train, targets := range releaseTrains {
 		log.Println("train", train)
 		branch := fmt.Sprintf("deploy/%s%s", train, *deploymentBranchSuffix)
+		gitopsBranches = append(gitopsBranches, branch)
+		gitopsTargets = append(gitopsTargets, targets...)
 		newBranch := workdir.SwitchToBranch(branch, *prInto)
 		if !newBranch {
 			// Find if we need to recreate the branch because target was deleted
@@ -153,10 +210,27 @@ func main() {
 				}
 			}
 		}
+	}
+
+	type pushTarget struct {
+		gitopsTarget string
+		pushTarget   string
+	}
+	var pushTargets []pushTarget
+
+	if *runBazelBuild {
+		bazelBuild(append(gitopsTargets)...)
+	}
+
+	for train, targets := range releaseTrains {
+		branch := fmt.Sprintf("deploy/%s%s", train, *deploymentBranchSuffix)
 		for _, target := range targets {
 			log.Println("train", train, "target", target)
-			bin := bazel.TargetToExecutable(target)
+			bin := bazel.TargetToExecutable(target, bazelBinDir)
 			exec.Mustex("", bin, "--nopush", "--nobazel", "--deployment_root", gitopsdir)
+		}
+		if *gitSubmodulePath != "" {
+			workdir.AddSubmodule(*gitSubmodulePath, *gitSourceRepo, *gitCommit)
 		}
 		if workdir.Commit(fmt.Sprintf("GitOps for release branch %s from %s commit %s\n%s", *releaseBranch, *branchName, *gitCommit, commitmsg.Generate(targets)), *gitopsPath) {
 			log.Println("branch", branch, "has changes, push is required")
@@ -164,34 +238,47 @@ func main() {
 			updatedGitopsBranches = append(updatedGitopsBranches, branch)
 		}
 	}
-	if len(updatedGitopsTargets) == 0 {
-		log.Println("No gitops changes to push")
-		return
+
+	walkGitopsTargets := updatedGitopsTargets
+	if *forceContainerPush {
+		walkGitopsTargets = gitopsTargets
 	}
 
-	// Push images
-	qr = bazelQuery(fmt.Sprintf("kind(k8s_container_push, deps(%s))", strings.Join(updatedGitopsTargets, " + ")))
-	targetsCh := make(chan string)
+	for _, gitopsTarget := range walkGitopsTargets {
+		bin := bazel.TargetToExecutable(gitopsTarget, bazelBinDir)
+		targets := strings.Split(exec.Mustex("", bin, "--list_push_targets"), "\n")
+		for _, t := range targets {
+			if t == "" {
+				continue
+			}
+			pushTargets = append(pushTargets, pushTarget{
+				gitopsTarget: gitopsTarget,
+				pushTarget:   t,
+			})
+		}
+	}
+
+	targetsCh := make(chan pushTarget)
 	var wg sync.WaitGroup
 	wg.Add(*pushParallelism)
 	for i := 0; i < *pushParallelism; i++ {
 		go func() {
 			defer wg.Done()
 			for target := range targetsCh {
-				bin := bazel.TargetToExecutable(target)
-				exec.Mustex("", bin)
+				bin := bazel.TargetToExecutable(target.gitopsTarget, bazelBinDir)
+				exec.Mustex("", bin, "--push_sequentially", "--push_target", target.pushTarget)
 			}
 		}()
 	}
-	for _, t := range qr.Results {
-		targetsCh <- t.Target.Rule.GetName()
+	for _, t := range pushTargets {
+		targetsCh <- t
 	}
 	close(targetsCh)
 	wg.Wait()
 
-	workdir.Push(updatedGitopsBranches)
+	workdir.Push(gitopsBranches)
 
-	for _, branch := range updatedGitopsBranches {
+	for _, branch := range gitopsBranches {
 		err := gitServer.CreatePR(branch, *prInto, fmt.Sprintf("GitOps deployment %s", branch))
 		if err != nil {
 			log.Fatal("unable to create PR: ", err)

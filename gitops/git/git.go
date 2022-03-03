@@ -42,7 +42,7 @@ func Clone(repo, dir, mirrorDir, primaryBranch, gitopsPath string) (*Repo, error
 		exec.Mustex("", "git", "clone", "-n", repo, dir)
 	}
 	exec.Mustex(dir, "git", "config", "--local", "core.sparsecheckout", "true")
-	genPath := fmt.Sprintf("%s/\n", gitopsPath)
+	genPath := fmt.Sprintf("%s/*\n", gitopsPath)
 	if err := ioutil.WriteFile(filepath.Join(dir, ".git/info/sparse-checkout"), []byte(genPath), 0644); err != nil {
 		return nil, fmt.Errorf("Unable to create .git/info/sparse-checkout: %w", err)
 	}
@@ -93,8 +93,19 @@ func (r *Repo) GetLastCommitMessage() (msg string) {
 	return msg
 }
 
+func (r *Repo) AddSubmodule(name, url, commit string) {
+	dir := r.Dir + "/" + name
+	exec.Mustex("", "git", "clone", "-n", "--depth", "1", url, dir)
+	exec.Mustex(dir, "git", "checkout", commit)
+
+	exec.Mustex(r.Dir, "git", "add", name)
+}
+
 // Commit all changes to the current branch. returns true if there were any changes
 func (r *Repo) Commit(message, gitopsPath string) bool {
+	if gitopsPath == "" {
+		gitopsPath = "."
+	}
 	exec.Mustex(r.Dir, "git", "add", gitopsPath)
 	if r.IsClean() {
 		return false

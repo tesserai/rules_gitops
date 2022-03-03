@@ -13,8 +13,12 @@ load(
     "@io_bazel_rules_docker//skylib:path.bzl",
     _get_runfile_path = "runfile",
 )
-load("//skylib:push.bzl", "K8sPushInfo")
+load("//skylib:push.bzl", _K8sPushInfo = "K8sPushInfo")
 load("//skylib:stamp.bzl", "stamp")
+load("//skylib:providers.bzl", _KustomizeInfo = "ImagePushesInfo")
+
+K8sPushInfo = _K8sPushInfo
+KustomizeInfo = _KustomizeInfo
 
 _binaries = {
     "darwin_amd64": ("https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv3.5.5/kustomize_v3.5.5_darwin_amd64.tar.gz", "5e286dc6e02c850c389aa3c1f5fc4ff5d70f064e480d49e804f209c717c462bd"),
@@ -92,9 +96,6 @@ _script_template = """\
 set -euo pipefail
 {kustomize} build --load_restrictor none --reorder legacy {kustomize_dir} {template_part} {resolver_part} >{out}
 """
-KustomizeInfo = provider(fields = [
-    "image_pushes",
-])
 
 def _kustomize_impl(ctx):
     kustomization_yaml_file = ctx.actions.declare_file(ctx.attr.name + "/kustomization.yaml")

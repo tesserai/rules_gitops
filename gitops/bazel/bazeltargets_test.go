@@ -14,7 +14,7 @@ package bazel
 import "testing"
 
 func TestTargetToExecutableHappypath(t *testing.T) {
-	s := TargetToExecutable("//rtb/bidder:rtb-uat-k8s01-iad-1b-bidder-first-uat.gitops")
+	s := TargetToExecutable("//rtb/bidder:rtb-uat-k8s01-iad-1b-bidder-first-uat.gitops", "bazel-bin")
 	if s != "bazel-bin/rtb/bidder/rtb-uat-k8s01-iad-1b-bidder-first-uat.gitops" {
 		t.Error("unexpected result", s)
 	}

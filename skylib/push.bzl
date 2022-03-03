@@ -18,6 +18,7 @@ Bazel rule for publishing images.
 
 load("@bazel_skylib//lib:dicts.bzl", "dicts")
 load("@io_bazel_rules_docker//container:providers.bzl", "PushInfo")
+load("//skylib:providers.bzl", _K8sPushInfo = "PushInfo")
 load(
     "@io_bazel_rules_docker//container:layer_tools.bzl",
     _gen_img_args = "generate_args_for_image",
@@ -29,13 +30,7 @@ load(
     "runfile",
 )
 
-K8sPushInfo = provider(fields = [
-    "image_label",
-    "legacy_image_name",
-    "registry",
-    "repository",
-    "digestfile",
-])
+K8sPushInfo = _K8sPushInfo
 
 def _get_runfile_path(ctx, f):
     return "${RUNFILES}/%s" % runfile(ctx, f)

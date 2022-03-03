@@ -14,11 +14,11 @@ package bazel
 import "strings"
 
 // TargetToExecutable converts bazel target name to respective executable name in bazel-bin
-func TargetToExecutable(target string) string {
+func TargetToExecutable(target string, bazelBinDir string) string {
 	if !strings.HasPrefix(target, "//") {
 		return target
 	}
-	target = "bazel-bin/" + target[2:]
+	target = bazelBinDir + "/" + target[2:]
 	target = strings.Replace(target, ":", "/", 1)
 	return target
 }
